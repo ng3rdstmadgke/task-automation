@@ -1,0 +1,42 @@
+# ZAC日報自動化ツールの実装計画
+
+ZACの日報入力をPlaywrightとPythonを用いて自動化するスクリプト、およびその実行環境をDocker化する計画です。
+
+## ユーザー確認事項
+- 今回はブラウザ操作をDocker環境内で行うため、**Playwrightのブラウザ画面は非表示 (ヘッドレスモード)** で実行する構成になります。実行進捗はターミナル（コンソール）のログを通して確認する形になります。
+- 最初のログインにおいて、ZACが二段階認証や画像認証等を要求する場合、ヘッドレスのDocker環境からのログインが難しいことがあります。その場合は、事前にホストPCで生成した認証情報（`auth.json`）をマウントして渡す方法をとる予定です（現在その設計にしています）。
+
+## 提案する変更点
+
+### 実行環境 (Docker)
+#### [NEW] [Dockerfile](file:///Users/ktamido/Library/CloudStorage/GoogleDrive-ng3rdstmadgke@gmail.com/マイドライブ/Projects/beex-tools/docker/zac_auto_nippou/Dockerfile)
+- 実行環境の差をなくすために提供するコンテナ定義ファイル。
+- ベースイメージとして軽量な `debian:bookworm-slim` (Python 3.12環境) などを利用予定。
+- Python環境の構築と、今回必要な `playwright` ブラウザ（Chromium）およびそのシステム依存ライブラリをインストールします。
+
+#### [NEW] [docker-compose.yml](file:///Users/ktamido/Library/CloudStorage/GoogleDrive-ng3rdstmadgke@gmail.com/マイドライブ/Projects/beex-tools/docker/zac_auto_nippou/docker-compose.yml)
+- Dockerコンテナを簡単に起動するための設定ファイル。
+- ホスト側の `zac_auto_nippou/` ディレクトリをマウントし、設定ファイル（[config.json](file:///Users/ktamido/Library/CloudStorage/GoogleDrive-ng3rdstmadgke@gmail.com/%E3%83%9E%E3%82%A4%E3%83%89%E3%83%A9%E3%82%A4%E3%83%96/Projects/beex-tools/zac_auto_nippou/config.json)）や認証状態（`auth.json`）をコンテナと共有できるようにします。
+
+### 自動化スクリプトの設定・本体
+#### [NEW] [config.json](file:///Users/ktamido/Library/CloudStorage/GoogleDrive-ng3rdstmadgke@gmail.com/マイドライブ/Projects/beex-tools/zac_auto_nippou/config.json)
+対象年月、有給日、案件ごとの所要時間を定義する設定ファイル。
+
+#### [MODIFY] [main.py](file:///Users/ktamido/Library/CloudStorage/GoogleDrive-ng3rdstmadgke@gmail.com/マイドライブ/Projects/beex-tools/zac_auto_nippou/main.py)
+自動化のメインロジック。
+1. `jpholiday` を使用した稼働日・祝日の判定。
+2. 指定した案件の時間を優先的に割り当て、残りの稼働時間を「自己啓発」で埋めるロジック。
+3. **【変更内容】**：Docker環境（GUIなし）でも動作するように、ヘッドレスモード (`headless=True`) へ変更します。
+
+#### [DELETE] requirements.txt
+#### [NEW] [pyproject.toml](file:///Users/ktamido/Library/CloudStorage/GoogleDrive-ng3rdstmadgke@gmail.com/マイドライブ/Projects/beex-tools/zac_auto_nippou/pyproject.toml)
+#### [NEW] [uv.lock](file:///Users/ktamido/Library/CloudStorage/GoogleDrive-ng3rdstmadgke@gmail.com/マイドライブ/Projects/beex-tools/zac_auto_nippou/uv.lock)
+`uv` を用いたパッケージ管理設定です。
+
+## 検証計画
+### 手動での検証手順
+1. ホストPC上で `uv sync` および `uv run playwright install chromium` を実行します。
+2. `uv run python generate_auth.py` を実行して `auth.json` を生成します（セッション情報の取得）。
+3. `$ docker compose up --build` を実行し、コンテナをビルドおよび起動します。
+4. ターミナルに出力されるログを確認し、各日付の入力および確定処理が正常に行われたかをモニターします。
+4. ZACのブラウザ画面を実際に開き、期待通りに時間が入力・確定されているか目視確認します。

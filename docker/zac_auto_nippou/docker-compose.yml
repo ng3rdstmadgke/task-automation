@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  zac-automation:
+    build:
+      context: ../../  # beex-toolsディレクトリをコンテキストとする
+      dockerfile: docker/zac_auto_nippou/Dockerfile
+    container_name: zac_auto_nippou_app
+    volumes:
+      - ../../zac_auto_nippou/config.json:/app/config.json
+      - ../../zac_auto_nippou/auth.json:/app/auth.json
+    environment:
+      - TZ=Asia/Tokyo
