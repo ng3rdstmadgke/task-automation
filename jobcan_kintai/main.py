@@ -3,7 +3,6 @@
 Jobcanの打刻を実行するメインスクリプト
 """
 import asyncio
-import sys
 from datetime import datetime
 from pathlib import Path
 from playwright.async_api import async_playwright
@@ -21,7 +20,7 @@ async def punch_jobcan():
     should_skip, reason = should_skip_punch(today)
     if should_skip:
         print(f"打刻スキップ: {reason}")
-        #return True
+        return True
 
     print("打刻を実行します")
 
@@ -57,7 +56,7 @@ async def punch_jobcan():
             push_button = page.locator("#adit-button-push")
             if await push_button.count() > 0:
                 print("PUSHボタンを発見: #adit-button-push")
-                #await push_button.click()
+                await push_button.click()
             else:
                 print("エラー: PUSHボタンが見つかりませんでした")
                 print("ページの構造が変更されている可能性があります")
@@ -85,15 +84,8 @@ async def punch_jobcan():
 
 
 if __name__ == "__main__":
-    print("標準出力バッファリングを無効化")
-    sys.stdout.reconfigure(line_buffering=True)
-
     Path("tmp").mkdir(exist_ok=True)
 
     success = asyncio.run(punch_jobcan())
-    if success:
-        print("=== 処理完了 ===")
-        sys.exit(0)
-    else:
-        print("=== 処理失敗 ===")
-        sys.exit(1)
+    if not success:
+        raise SystemExit(1)

@@ -3,8 +3,6 @@
 Jobcanにログインしてセッション情報を保存するスクリプト
 """
 import asyncio
-import os
-from pathlib import Path
 from playwright.async_api import async_playwright
 from pydantic_settings import BaseSettings
 
@@ -78,14 +76,9 @@ async def generate_auth():
 
 
 if __name__ == "__main__":
-    print("標準出力バッファリングを無効化")
-    import sys
-    sys.stdout.reconfigure(line_buffering=True)
-
     success = asyncio.run(generate_auth())
     if success:
         print("=== 認証情報生成完了 ===")
-        sys.exit(0)
     else:
         print("=== 認証情報生成失敗 ===")
-        sys.exit(1)
+        raise SystemExit(1)
