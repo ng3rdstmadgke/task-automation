@@ -2,14 +2,10 @@
 
 Jobcanの勤怠打刻を自動化するスクリプトです。
 
-## 機能
-
 - 土日・祝日・有給休暇を自動判定
 - 平日のみ自動打刻を実行
-- セッション保存により毎回のログインを回避
-- Dockerコンテナで実行
 
-## セットアップ
+## 事前準備
 
 ### 1. 依存ライブラリをインストール
 
@@ -50,30 +46,14 @@ cp config.sample.json config.json
 }
 ```
 
-### 4. 認証情報生成スクリプトを実行
+## 実行方法 (ローカル)
 
 ```bash
-uv run python generate_auth.py
+# generate_auth.pyは事前にログインセッションファイル(auth.json)を生成
+uv run python generate_auth.py && uv run python main.py
 ```
 
-成功すると`auth.json`が生成されます。
-
-## 実行方法
-
-### ローカルで実行
-
-```bash
-uv run python main.py
-```
-
-### Dockerで実行
-
-```bash
-cd docker
-docker compose up --build --force-recreate
-```
-
-### シェルスクリプトで実行
+## 実行方法 (Docker)
 
 ```bash
 ./scripts/run_jobcan.sh

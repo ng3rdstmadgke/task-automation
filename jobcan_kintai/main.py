@@ -21,7 +21,7 @@ async def punch_jobcan():
     should_skip, reason = should_skip_punch(today)
     if should_skip:
         print(f"打刻スキップ: {reason}")
-        return True
+        #return True
 
     print("打刻を実行します")
 
@@ -57,7 +57,7 @@ async def punch_jobcan():
             push_button = page.locator("#adit-button-push")
             if await push_button.count() > 0:
                 print("PUSHボタンを発見: #adit-button-push")
-                await push_button.click()
+                #await push_button.click()
             else:
                 print("エラー: PUSHボタンが見つかりませんでした")
                 print("ページの構造が変更されている可能性があります")

@@ -9,7 +9,7 @@ ENV TZ=Asia/Tokyo
 
 WORKDIR /app
 
-COPY jobcan_kintai/pyproject.toml /app/
+COPY jobcan_kintai/pyproject.toml jobcan_kintai/uv.lock /app/
 RUN pip install uv
 RUN uv sync
 
