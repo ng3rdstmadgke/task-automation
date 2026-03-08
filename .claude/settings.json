@@ -1,0 +1,47 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit",
+      "NotebookEdit",
+      "Write",
+      "Skill",
+      "WebSearch",
+      "WebFetch",
+      "Bash",
+      "mcp__chrome-devtools__*",
+      "mcp__context7__*",
+      "mcp__next-devtools__*",
+      "mcp__playwright__*",
+      "mcp__serena__*"
+    ],
+    "deny": [],
+    "ask": [
+      "Bash(git remote:*)",
+      "Bash(git push:*)",
+      "Bash(kubectl apply:*)",
+      "Bash(Kubectl delete:*)",
+      "Bash(kubectl create:*)",
+      "Bash(kubectl edit:*)",
+      "Bash(terraform:*)",
+      "Bash(make:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(tsx:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "next-devtools",
+    "chrome-devtools",
+    "playwright",
+    "context7",
+    "serena"
+  ],
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true
+  }
+}

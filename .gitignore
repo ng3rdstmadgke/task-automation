@@ -1,1 +1,8 @@
 .venv/
+core
+.gemini/
+.claude/*.local.*
+.kiri/
+.serena/
+.playwright-mcp/
+.devcontainer/.env

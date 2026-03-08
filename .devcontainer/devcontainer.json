@@ -1,0 +1,126 @@
+/**
+ * devcontainerプロパティ一覧: https://containers.dev/implementors/json_reference/
+ *   - devcontainer.jsonで利用できる変数: https://containers.dev/implementors/json_reference/#variables-in-devcontainerjson
+ */
+{
+  /**
+   * プロパティ: https://containers.dev/implementors/json_reference/#general-properties
+   */
+  // UIに表示するdevcontainerの名前
+  "name": "task-automation",
+
+   // コンテナの環境変数設定
+  "containerEnv": {
+      "PROJECT_NAME": "task-automation",
+      // devcontainerのID
+      "DEVCONTAINER_ID": "${devcontainerId}",
+      // ホスト側のプロジェクトディレクトリ
+      "HOST_DIR": "${localWorkspaceFolder}",
+      // コンテナ側のプロジェクトディレクトリ
+      "PROJECT_DIR": "${containerWorkspaceFolder}",
+      // ホスト側のユーザー名
+      "HOST_USER": "${localEnv:USER}",
+      // devcontainerが所属するネットワーク名
+      "DOCKER_NETWORK": "br-task-automation-${localEnv:USER}"
+  },
+
+  "forwardPorts": [
+    "sample-app-${localEnv:USER}:8000"
+  ],
+
+  "mounts": [
+      "source=${localEnv:HOME}/.ssh/,target=/home/vscode/.ssh/,type=bind,consistency=cached",
+      "source=${localEnv:HOME}/.aws/,target=/home/vscode/.aws/,type=bind,consistency=cached",
+      "source=${localEnv:HOME}/.task-automation/.kube/,target=/home/vscode/.kube/,type=bind,consistency=cached",
+      "source=${localEnv:HOME}/.task-automation/.config/helm/,target=/home/vscode/.config/helm/,type=bind,consistency=cached",
+      "source=${localEnv:HOME}/.task-automation/.claude/,target=/home/vscode/.claude/,type=bind,consistency=cached",
+      "source=${localEnv:HOME}/.task-automation/.claude.json,target=/home/vscode/.claude.json,type=bind,consistency=cached",
+      "source=${localEnv:HOME}/.task-automation/.gemini/,target=/home/vscode/.gemini/,type=bind,consistency=cached"
+  ],
+
+  // devcontainerに追加する機能の定義
+  // features一覧: https://containers.dev/features
+  "features": {
+    // docker outside of dockerを利用するための設定: https://github.com/devcontainers/features/tree/main/src/docker-outside-of-docker
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    // k9s: https://github.com/rio/features
+    "ghcr.io/rio/features/k9s:1": {},
+    // GitHub CLI: https://github.com/cli/cli
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+
+  /**
+   * Docierfile関連のプロパティ: https://containers.dev/implementors/json_reference/#image-specific
+   */
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."  // プロジェクトルートをdocker buildのコンテキストに指定
+  },
+
+  // devcontainer 起動時の docker run のオプション
+  "runArgs": [
+    "--network=br-task-automation-${localEnv:USER}"
+  ],
+
+
+  /**
+   * ライフサイクル関連のプロパティ: https://containers.dev/implementors/json_reference/#lifecycle-scripts
+   */
+  // コンテナ初期化時にホスト側で実行されるコマンド
+  "initializeCommand": "/bin/bash .devcontainer/init.sh",
+
+  // コンテナが初めて起動した直後にコンテナ内で実行されるコマンド
+  "onCreateCommand": "/bin/bash .devcontainer/on-create.sh",
+
+  // devcontainerにアタッチするたびにコンテナ内で毎回実行されるコマンド
+  "postAttachCommand": "/bin/bash .devcontainer/post-attach.sh",
+
+
+
+  /**
+   * VSCodeのプラグイン
+   */
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Docs
+        "hediet.vscode-drawio",
+        "yzhang.markdown-all-in-one",
+        "bierner.github-markdown-preview",
+        "bierner.markdown-mermaid",
+        "jebbs.plantuml",
+
+        // Terraform
+        "hashicorp.hcl",
+        "hashicorp.terraform",
+        "saramorillon.terraform-graph",
+
+        // Python
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "matangover.mypy",
+        "charliermarsh.ruff",
+        "ms-toolsai.jupyter",
+
+        // Copilot
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+
+        // Codex
+        "openai.chatgpt",
+
+        // Claude
+        "anthropic.claude-code",
+
+        // Gemini
+        "google.gemini-cli-vscode-ide-companion",
+        "google.geminicodeassist",
+
+        // Others
+        "ms-vscode.makefile-tools",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  }
+}
