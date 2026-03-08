@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  zac-automation:
+    build:
+      context: ../../
+      dockerfile: zac_auto_nippou/docker/Dockerfile
+    container_name: zac_auto_nippou_app_v2
+    volumes:
+      - type: bind
+        source: ${HOST_DIR:-../../}/zac_auto_nippou/config.json
+        target: /app/config.json
+        read_only: true
+      - type: bind
+        source: ${HOST_DIR:-../../}/zac_auto_nippou/.env
+        target: /app/.env
+        read_only: true
+    environment:
+      - TZ=Asia/Tokyo

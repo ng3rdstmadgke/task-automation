@@ -1,4 +1,15 @@
 .venv/
+__pycache__/
+
+core
+.gemini/
+.claude/*.local.*
+.kiri/
+.serena/
+.playwright-mcp/
+.devcontainer/.env
+.devcontainer/
+tmp/
 zac_auto_nippou/config.json
 zac_auto_nippou/.env
 zac_auto_nippou/auth.json

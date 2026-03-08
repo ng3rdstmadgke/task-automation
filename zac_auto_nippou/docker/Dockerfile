@@ -17,15 +17,14 @@ COPY zac_auto_nippou/pyproject.toml zac_auto_nippou/uv.lock /app/
 RUN pip install uv
 RUN uv sync
 
-COPY zac_auto_nippou/ /app/
-
 # Playwrightが使用するブラウザ(Chromium)と依存OSライブラリ群のインストール
 # uv環境内のplaywrightコマンドを呼び出す
 RUN uv run playwright install chromium
 RUN uv run playwright install-deps chromium
 
 # Copy and set permissions for entrypoint script
-COPY docker/zac_auto_nippou/entrypoint.sh /app/entrypoint.sh
+COPY zac_auto_nippou/ /app/
+COPY zac_auto_nippou/docker/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # 実行コマンド (docker-compose側で上書き可能)
