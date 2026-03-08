@@ -72,5 +72,5 @@ ZAC_PASSWORD=your_actual_password
 
 ```bash
 cd $PROJECT_DIR/zac_auto_nippou/docker
-docker compose up --build --force-recreate
+docker compose up --build --force-recreate --remove-orphans
 ```

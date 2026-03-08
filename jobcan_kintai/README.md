@@ -64,8 +64,8 @@ uv run python generate_auth.py && uv run python main.py
 以下のようにcrontabに登録すると、9:00と18:00に自動実行されます。
 
 ```bash
-0 9 * * * /path/to/jobcan_kintai/scripts/run_jobcan.sh >> /tmp/jobcan_kintai.log 2>&1
-0 18 * * * /path/to/jobcan_kintai/scripts/run_jobcan.sh >> /tmp/jobcan_kintai.log 2>&1
+0 9 * * * /home/user/path/to/task-automation/scripts/run_jobcan_kintai.sh >> /tmp/jobcan_kintai.log 2>&1
+0 18 * * * /home/user/path/to/task-automation/scripts/run_jobcan_kintai.sh >> /tmp/jobcan_kintai.log 2>&1
 ```
 
 ## トラブルシューティング

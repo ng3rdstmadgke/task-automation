@@ -11,7 +11,7 @@ complete -C '/usr/local/bin/terraform' terraform
 
 . "$HOME/.cargo/env"
 
-PATH="$PATH:$PROJECT_DIR/bin"
+PATH="$PATH:$PROJECT_DIR/scripts"
 
 export AWS_REGION=ap-northeast-1
 export AWS_DEFAULT_REGION=ap-northeast-1
