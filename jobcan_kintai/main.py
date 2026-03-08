@@ -41,39 +41,24 @@ async def punch_jobcan():
             page = await context.new_page()
 
             print("打刻ページにアクセス中...")
-            await page.goto("https://ssl.jobcan.jp/employee", timeout=30000)
+            await page.goto("https://ssl.jobcan.jp/jbcoauth/login", timeout=30000)
             await page.wait_for_load_state("networkidle")
 
             current_url = page.url
-            if "sign_in" in current_url:
+            if "sign_in" in current_url or "login" in current_url.split("/")[-1]:
                 print("エラー: セッションが期限切れです")
                 print("generate_auth.py を再実行してセッションを更新してください")
                 return False
 
-            print("ログイン状態確認: OK")
+            print(f"ログイン状態確認: OK ({current_url})")
 
             print("PUSHボタンを探しています...")
 
-            selectors = [
-                'button:has-text("PUSH")',
-                'input[type="submit"][value="PUSH"]',
-                'button:text-is("PUSH")',
-                'input[value="PUSH"]',
-            ]
-
-            button_found = False
-            for selector in selectors:
-                try:
-                    button = page.locator(selector).first
-                    if await button.count() > 0:
-                        print(f"PUSHボタンを発見: {selector}")
-                        await button.click()
-                        button_found = True
-                        break
-                except Exception:
-                    continue
-
-            if not button_found:
+            push_button = page.locator("#adit-button-push")
+            if await push_button.count() > 0:
+                print("PUSHボタンを発見: #adit-button-push")
+                await push_button.click()
+            else:
                 print("エラー: PUSHボタンが見つかりませんでした")
                 print("ページの構造が変更されている可能性があります")
                 await page.screenshot(path="tmp/error_screenshot.png")
