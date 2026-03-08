@@ -1,1 +1,4 @@
 .venv/
+zac_auto_nippou/config.json
+zac_auto_nippou/.env
+zac_auto_nippou/auth.json

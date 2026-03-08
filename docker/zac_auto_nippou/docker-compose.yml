@@ -5,9 +5,9 @@ services:
     build:
       context: ../../  # beex-toolsディレクトリをコンテキストとする
       dockerfile: docker/zac_auto_nippou/Dockerfile
-    container_name: zac_auto_nippou_app
+    container_name: zac_auto_nippou_app_v2
     volumes:
-      - ../../zac_auto_nippou/config.json:/app/config.json:ro
-      - ../../zac_auto_nippou/.env:/app/.env:ro
+      - ${PWD}/../../zac_auto_nippou/config.json:/app/config.json:ro
+      - ${PWD}/../../zac_auto_nippou/.env:/app/.env:ro
     environment:
       - TZ=Asia/Tokyo

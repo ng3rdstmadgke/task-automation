@@ -19,9 +19,6 @@ RUN uv sync
 
 COPY zac_auto_nippou/ /app/
 
-# Remove config files that will be mounted as volumes
-RUN rm -f /app/config.json /app/auth.json /app/.env
-
 # Playwrightが使用するブラウザ(Chromium)と依存OSライブラリ群のインストール
 # uv環境内のplaywrightコマンドを呼び出す
 RUN uv run playwright install chromium
