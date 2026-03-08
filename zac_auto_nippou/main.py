@@ -5,9 +5,9 @@ import jpholiday
 import os
 from playwright.sync_api import sync_playwright
 
-def is_workday_or_paid(day, target_year, target_month, paid_leave_days):
+def is_weekday(day, target_year, target_month):
     d = date(target_year, target_month, day)
-    # 土日 または 祝日 は対象外
+    # 土日または祝日の場合False（平日の場合True）
     if d.weekday() >= 5 or jpholiday.is_holiday(d):
         return False
     return True
@@ -24,7 +24,7 @@ def calculate_schedule(config):
     paid_days_set = set(paid_leave_days)
     
     for day in range(1, num_days + 1):
-        if is_workday_or_paid(day, target_year, target_month, paid_leave_days):
+        if is_weekday(day, target_year, target_month):
             if day not in paid_days_set:
                 workdays.append(day)
                 
