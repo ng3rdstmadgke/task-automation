@@ -29,4 +29,4 @@ COPY docker/zac_auto_nippou/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # 実行コマンド (docker-compose側で上書き可能)
-CMD ["uv", "run", "python", "main.py"]
+CMD ["/app/entrypoint.sh"]
