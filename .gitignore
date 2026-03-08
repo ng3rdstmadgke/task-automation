@@ -1,10 +1,12 @@
-.venv/
 core
-.gemini/
 .claude/*.local.*
 .kiri/
 .serena/
 .playwright-mcp/
-.devcontainer/.env
+
+.venv/
+
 .devcontainer/
+.devcontainer/.env
+docs/plans
 tmp/
