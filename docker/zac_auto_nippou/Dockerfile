@@ -13,7 +13,7 @@ ENV TZ=Asia/Tokyo
 WORKDIR /app
 
 # 依存ライブラリのコピーとインストール (uvを利用)
-COPY zac_auto_nippou/pyproject.toml zac_auto_nippou/uv.lock .
+COPY zac_auto_nippou/pyproject.toml zac_auto_nippou/uv.lock /app/
 RUN pip install uv
 RUN uv sync
 
