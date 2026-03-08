@@ -51,6 +51,35 @@ config.json を開き修正
 uv run python generate_auth.py && uv run python main.py
 ```
 
+## 実行方法 (Docker)
+
+### 前提条件
+- Docker と Docker Compose がインストールされていること
+- `.env` と `config.json` ファイルが作成されていること（上記手順2-3を参照）
+
+### 実行手順
+
+1. Dockerイメージをビルド:
+```bash
+cd docker/zac_auto_nippou
+docker-compose build
+```
+
+2. コンテナを実行:
+```bash
+docker-compose up
+```
+
+または、ビルドと実行を同時に行う:
+```bash
+docker-compose up --build
+```
+
+### 注意事項
+- `config.json` と `.env` ファイルは読み取り専用 (`:ro`) でマウントされます
+- Playwright Chromium ブラウザはイメージ内に含まれています
+- タイムゾーンは `Asia/Tokyo` に設定されています
+
 ## 変更履歴
 
 ### 2026-03-08: 型安全性の向上
