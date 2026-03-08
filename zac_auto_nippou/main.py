@@ -47,7 +47,7 @@ class Task(BaseModel):
     """個別タスクの構造"""
     code: str
     content: TaskContent
-    hours: float = Field(gt=0, le=24)
+    hours: float = Field(gt=0)
 
 
 class DaySchedule(BaseModel):
