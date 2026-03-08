@@ -152,12 +152,12 @@ def run_automation(config):
                     frame.locator("select[name='time_break_input_hour']").select_option("0")
                     frame.locator("select[name='time_break_input_minute']").select_option("0")
                 elif day_info["type"] == "workday":
-                    frame.locator("select[name='time_in_hour']").select_option(config["default_times"]["arrival"])
+                    frame.locator("select[name='time_in_hour']").select_option("9")
                     frame.locator("select[name='time_in_minute']").select_option("0")
-                    frame.locator("select[name='time_out_hour']").select_option(config["default_times"]["departure"])
+                    frame.locator("select[name='time_out_hour']").select_option("18")
                     frame.locator("select[name='time_out_minute']").select_option("0")
 
-                    frame.locator("select[name='time_break_input_hour']").select_option(config["default_times"]["break"])
+                    frame.locator("select[name='time_break_input_hour']").select_option("1")
                     frame.locator("select[name='time_break_input_minute']").select_option("0")
             except Exception as e:
                 print(f"  時間の入力に失敗しました: {e}")
@@ -176,6 +176,7 @@ def run_automation(config):
 
                     # 作業内容をセレクトボックスでvalue属性で選択（例: "1"=案件作業, "55"=自己啓発, "27"=有給）
                     frame.locator(f"select[name='id_sagyou_naiyou{row_num}']").select_option(task["content"])
+                    page.wait_for_timeout(2000)  # 作業内容選択後のJavaScript処理を待つ
 
                     if task["code"]:
                         # 案件コードを入力してTabキーでフォーカスを外し、読み込みを発生させる

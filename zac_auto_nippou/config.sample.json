@@ -1,0 +1,9 @@
+{
+  "target_year": 2026,
+  "target_month": 3,
+  "paid_leave_days": [6],
+  "project_hours": {
+    "PJ_CODE_1": 20,
+    "PJ_CODE_2": 4
+  }
+}
