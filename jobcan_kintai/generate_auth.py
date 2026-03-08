@@ -4,17 +4,14 @@ Jobcanにログインしてセッション情報を保存するスクリプト
 """
 import asyncio
 from playwright.async_api import async_playwright
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """環境変数の設定"""
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
+
     jobcan_email: str
     jobcan_password: str
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
 
 
 async def generate_auth():
