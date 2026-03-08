@@ -12,3 +12,4 @@ wheels/
 # ZAC Auto Nippou specific
 auth.json
 config.json
+.env

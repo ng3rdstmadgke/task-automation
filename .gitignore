@@ -6,3 +6,5 @@ core
 .serena/
 .playwright-mcp/
 .devcontainer/.env
+.devcontainer/
+tmp/

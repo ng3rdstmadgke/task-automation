@@ -4,7 +4,7 @@ ZACの日報入力を自動化するスクリプトです。
 
 ## 準備（初回のみ）
 
-Docker環境（ヘッドレス）で実行するため、事前にPC上でログインセッションファイル（`auth.json`）を生成する必要があります。
+Docker環境（ヘッドレス）で実行するため、事前にログインセッションファイル（`auth.json`）を生成する必要があります。
 
 1. Pythonパッケージ管理ツール `uv` をインストールします。
 2. 依存ライブラリをインストールし、ブラウザをセットアップします。
@@ -12,11 +12,20 @@ Docker環境（ヘッドレス）で実行するため、事前にPC上でログ
    uv sync
    uv run playwright install chromium
    ```
-3. 認証情報生成スクリプトを実行します。
+3. 環境変数ファイルを作成します。
+   ```bash
+   cp .env.sample .env
+   ```
+   `.env` ファイルを開き、ZACのログインIDとパスワードを設定してください。
+   ```
+   ZAC_ID=your_actual_zac_id
+   ZAC_PASSWORD=your_actual_password
+   ```
+4. 認証情報生成スクリプトを実行します。
    ```bash
    uv run python generate_auth.py
    ```
-   ブラウザが起動するので、ZACにログインし「日報」画面が表示されるまで進んでください。自動で `auth.json` がディレクトリ内に作成されます。
+   自動的にZACにログインし、日報画面まで進んで `auth.json` がディレクトリ内に作成されます。
 
 ## 実行方法 (Docker)
 
