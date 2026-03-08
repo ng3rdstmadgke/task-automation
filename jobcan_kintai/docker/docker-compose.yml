@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  jobcan-automation:
+    build:
+      context: ../../
+      dockerfile: jobcan_kintai/docker/Dockerfile
+    container_name: jobcan_kintai_app
+    volumes:
+      - type: bind
+        source: ${HOST_DIR:-../../}/jobcan_kintai/config.json
+        target: /app/config.json
+        read_only: true
+      - type: bind
+        source: ${HOST_DIR:-../../}/jobcan_kintai/.env
+        target: /app/.env
+        read_only: true
+      - type: bind
+        source: ${HOST_DIR:-../../}/jobcan_kintai/auth.json
+        target: /app/auth.json
+        read_only: true
+    environment:
+      - TZ=Asia/Tokyo
+      - PYTHONUNBUFFERED=1
