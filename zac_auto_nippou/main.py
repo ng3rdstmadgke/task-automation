@@ -104,7 +104,8 @@ def calculate_schedule(config: Config) -> ScheduleResult:
     for day in paid_leave_days:
         schedule[day] = DaySchedule(
             type=DayType.PAID_LEAVE,
-            tasks=[Task(code="", content=TaskContent.PAID_LEAVE, hours=8)]
+            tasks=[Task(code="", content=TaskContent.PAID_LEAVE, hours=8)],
+            is_week_last_day=day in week_last_days
         )
         
     # 2. 案件時間のキューを作成
@@ -138,13 +139,9 @@ def calculate_schedule(config: Config) -> ScheduleResult:
 
         schedule[day] = DaySchedule(
             type=DayType.WORKDAY,
-            tasks=tasks_today
+            tasks=tasks_today,
+            is_week_last_day=day in week_last_days
         )
-
-    # week_last_daysフラグを設定
-    for day in week_last_days:
-        if day in schedule:
-            schedule[day].is_week_last_day = True
 
     return ScheduleResult(schedule=schedule)
 
