@@ -264,17 +264,17 @@ def run_automation(config: Config):
                 print("  確定処理完了")
                 
                 # --- 週報の確定（週の最後の日のみ） ---
-                if day_info.is_week_last_day:
-                    # 週の確定で再度画面がリフレッシュされる場合がある
-                    frame = page.frame_locator("#classic_window")
-                    # 週報確定ボタンにはidやnameがないため、valueで判定
-                    weekly_confirm = frame.locator("input[value='週報確定']")
-                    if weekly_confirm.count() > 0:
-                        print("  [週報] 週報確定ボタンをクリックします...")
-                        weekly_confirm.click()
-                        page.wait_for_load_state("networkidle")
-                        page.wait_for_timeout(2000)
-                        print(f"  [週報] {day}日は週の最後のため、週報を確定しました。")
+                #if day_info.is_week_last_day:
+                #    # 週の確定で再度画面がリフレッシュされる場合がある
+                #    frame = page.frame_locator("#classic_window")
+                #    # 週報確定ボタンにはidやnameがないため、valueで判定
+                #    weekly_confirm = frame.locator("input[value='週報確定']")
+                #    if weekly_confirm.count() > 0:
+                #        print("  [週報] 週報確定ボタンをクリックします...")
+                #        weekly_confirm.click()
+                #        page.wait_for_load_state("networkidle")
+                #        page.wait_for_timeout(3000)
+                #        print(f"  [週報] {day}日は週の最後のため、週報を確定しました。")
             
             print(f"{day}日の処理完了。")
 
