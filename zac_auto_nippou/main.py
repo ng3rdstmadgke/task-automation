@@ -21,6 +21,47 @@ class TaskContent(str, Enum):
     SELF_DEVELOPMENT = "55"      # 自己啓発
 
 
+class ProjectAllocation(BaseModel):
+    """プロジェクトへの工数配分"""
+    project_code: str
+    hours: float = Field(gt=0)
+
+
+class Config(BaseModel):
+    """config.json の構造"""
+    target_year: int = Field(ge=2000, le=2100)
+    target_month: int = Field(ge=1, le=12)
+    paid_leave_days: list[int] = Field(default_factory=list)
+    project_hours: list[ProjectAllocation]
+
+    @field_validator('project_hours', mode='before')
+    @classmethod
+    def convert_project_hours_dict(cls, v):
+        """後方互換性のため、dictからlist[ProjectAllocation]に自動変換"""
+        if isinstance(v, dict):
+            return [ProjectAllocation(project_code=k, hours=h) for k, h in v.items()]
+        return v
+
+
+class Task(BaseModel):
+    """個別タスクの構造"""
+    code: str
+    content: TaskContent
+    hours: float = Field(gt=0, le=24)
+
+
+class DaySchedule(BaseModel):
+    """1日のスケジュール構造"""
+    type: DayType
+    tasks: list[Task]
+    is_week_last_day: bool = False
+
+
+class ScheduleResult(BaseModel):
+    """calculate_scheduleの戻り値"""
+    schedule: dict[int, DaySchedule]
+
+
 def is_weekday(day, target_year, target_month):
     d = date(target_year, target_month, day)
     # 土日または祝日の場合False（平日の場合True）
