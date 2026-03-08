@@ -1,4 +1,5 @@
 import os
+import sys
 from playwright.sync_api import sync_playwright
 from pydantic import Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -18,7 +19,7 @@ def login_and_save_auth():
         print("エラー: .envファイルにZAC_IDとZAC_PASSWORDを設定してください。")
         print(".env.sampleを参考に.envファイルを作成してください。")
         print(f"詳細: {e}")
-        return
+        sys.exit(1)
 
     zac_id = credentials.zac_id
     zac_password = credentials.zac_password
@@ -53,7 +54,7 @@ def login_and_save_auth():
         except Exception as e:
             print(f"第1段階のログインに失敗しました: {e}")
             browser.close()
-            return
+            sys.exit(1)
 
         # 第2段階: ZACの通常ログイン（必要な場合）
         print(f"現在のURL: {page.url}")
@@ -96,7 +97,7 @@ def login_and_save_auth():
             print(f"現在のURL: {page.url}")
             print("手動で確認が必要な場合があります。")
             browser.close()
-            return
+            sys.exit(1)
 
         print("セッション情報(auth.json)を保存します。")
         context.storage_state(path="auth.json")
