@@ -120,19 +120,30 @@ def run_automation(config):
             if day not in schedule:
                 continue # 土日・祝日スキップ
                 
+            current_date = date(config["target_year"], config["target_month"], day)
+            if current_date > date.today():
+                print(f"{day}日は未来の日付のためスキップします。")
+                continue
+                
             print(f"--- {day}日 の処理を開始 ---")
             
             try:
+                # iframe "classic_window" を特定
+                frame = page.frame_locator("#classic_window")
+                
                 # 左の小さなカレンダー表から日付リンクをクリック
-                day_link = page.get_by_role("link", name=str(day), exact=True)
+                day_link = frame.get_by_role("link", name=str(day), exact=True)
                 if day_link.is_visible():
                     day_link.click()
                     page.wait_for_load_state("networkidle")
             except Exception as e:
                 print(f"{day}日 の画面遷移に失敗しました（すでに選択されている可能性があります）。: {e}")
                 
-            # 確定済みのチェック（「確定解除」ボタンがある場合は既に確定済み）
-            if page.locator("input[value='確定解除']").is_visible():
+            # iframe を再取得（画面遷移でリロードされている可能性があるため）
+            frame = page.frame_locator("#classic_window")
+                
+            # 確定済みのチェック（「確定解除」ボタンがdisabledでない状態で存在する場合は既に確定済み）
+            if frame.locator("input[value='確定解除']:not([disabled])").is_visible():
                 print(f"{day}日はすでに確定済みのためスキップします。")
                 continue
                 
@@ -141,18 +152,18 @@ def run_automation(config):
             try:
                 # --- 出退勤時間の入力 ---
                 if day_info["type"] == "paid_leave":
-                    page.locator("tr").filter(has_text="出社時刻").locator("select").nth(0).select_option(config["default_times"]["arrival"])
-                    page.locator("tr").filter(has_text="出社時刻").locator("select").nth(1).select_option("00")
-                    page.locator("tr").filter(has_text="退社時刻").locator("select").nth(0).select_option(config["default_times"]["paid_leave_departure"])
-                    page.locator("tr").filter(has_text="退社時刻").locator("select").nth(1).select_option("00")
+                    frame.locator("tr").filter(has_text="出社時刻").locator("select").nth(0).select_option(config["default_times"]["arrival"])
+                    frame.locator("tr").filter(has_text="出社時刻").locator("select").nth(1).select_option("00")
+                    frame.locator("tr").filter(has_text="退社時刻").locator("select").nth(0).select_option(config["default_times"]["paid_leave_departure"])
+                    frame.locator("tr").filter(has_text="退社時刻").locator("select").nth(1).select_option("00")
                 elif day_info["type"] == "workday":
-                    page.locator("tr").filter(has_text="出社時刻").locator("select").nth(0).select_option(config["default_times"]["arrival"])
-                    page.locator("tr").filter(has_text="出社時刻").locator("select").nth(1).select_option("00")
-                    page.locator("tr").filter(has_text="退社時刻").locator("select").nth(0).select_option(config["default_times"]["departure"])
-                    page.locator("tr").filter(has_text="退社時刻").locator("select").nth(1).select_option("00")
+                    frame.locator("tr").filter(has_text="出社時刻").locator("select").nth(0).select_option(config["default_times"]["arrival"])
+                    frame.locator("tr").filter(has_text="出社時刻").locator("select").nth(1).select_option("00")
+                    frame.locator("tr").filter(has_text="退社時刻").locator("select").nth(0).select_option(config["default_times"]["departure"])
+                    frame.locator("tr").filter(has_text="退社時刻").locator("select").nth(1).select_option("00")
                     
-                    page.locator("tr").filter(has_text="休憩").locator("select").nth(0).select_option(config["default_times"]["break"])
-                    page.locator("tr").filter(has_text="休憩").locator("select").nth(1).select_option("00")
+                    frame.locator("tr").filter(has_text="休憩").locator("select").nth(0).select_option(config["default_times"]["break"])
+                    frame.locator("tr").filter(has_text="休憩").locator("select").nth(1).select_option("00")
             except Exception as e:
                 print(f"時間の入力に失敗しましたが、一旦続行します。詳細: {e}")
                 
@@ -162,17 +173,17 @@ def run_automation(config):
                 try:
                     # 作業内容 （ZACはInputのnameにTaskContentが含まれることが多いが、環境依存の可能性あり）
                     # 最初の行から順に入力
-                    page.locator("input[name*='TaskContent']").nth(i).fill(task["content"])
+                    frame.locator("input[name*='TaskContent']").nth(i).fill(task["content"])
                     
                     if task["code"]:
                         # 案件コードを入力してTabキーでフォーカスを外し、読み込みを発生させる
-                        page.locator("input[name*='ProjectCode']").nth(i).fill(task["code"])
-                        page.locator("input[name*='ProjectCode']").nth(i).press("Tab")
+                        frame.locator("input[name*='ProjectCode']").nth(i).fill(task["code"])
+                        frame.locator("input[name*='ProjectCode']").nth(i).press("Tab")
                         page.wait_for_timeout(1000) # 非同期の名称自動表示を待つ
                         
                     # 所要時間 （出社・退社・休憩のSelectが上に6つあるため、それ以降のSelectを対象にする）
                     # 注: ここはZACのDOM構成によってずれやすいため、もしエラーになったら調整が必要です
-                    hour_selects = page.locator("select[name*='Hour']")
+                    hour_selects = frame.locator("select[name*='Hour']")
                     # 概ね案件1行目の時間は4番目(index=3)にあたる
                     hour_selects.nth(3 + i*2).select_option(str(task["hours"])) 
                     
@@ -180,14 +191,16 @@ def run_automation(config):
                     print(f"案件行 {i+1} の入力中にエラーが発生しました。セレクタの調整が必要かもしれません。: {e}")
                     
             # --- 日報の確定 ---
-            confirm_btn = page.locator("input[value='確 定']")
+            confirm_btn = frame.locator("input[value='確 定']")
             if confirm_btn.is_visible():
                 confirm_btn.click()
                 page.wait_for_load_state("networkidle")
                 
                 # --- 週報の確定（週の最後の日のみ） ---
                 if day in week_last_days:
-                    weekly_confirm = page.locator("input[value='週報確定']")
+                    # 週の確定で再度画面がリフレッシュされる場合がある
+                    frame = page.frame_locator("#classic_window")
+                    weekly_confirm = frame.locator("input[value='週報確定']")
                     if weekly_confirm.is_visible():
                         weekly_confirm.click()
                         page.wait_for_load_state("networkidle")
