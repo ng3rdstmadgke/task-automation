@@ -17,3 +17,4 @@ services:
         read_only: true
     environment:
       - TZ=Asia/Tokyo
+      - PYTHONUNBUFFERED=1
