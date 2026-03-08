@@ -12,15 +12,16 @@ class ZacCredentials(BaseSettings):
     zac_password: str = Field(min_length=1)
 
 def login_and_save_auth():
-    # .envファイルから環境変数を読み込む
-    load_dotenv()
-    zac_id = os.getenv("ZAC_ID")
-    zac_password = os.getenv("ZAC_PASSWORD")
-
-    if not zac_id or not zac_password:
+    try:
+        credentials = ZacCredentials()
+    except ValidationError as e:
         print("エラー: .envファイルにZAC_IDとZAC_PASSWORDを設定してください。")
         print(".env.sampleを参考に.envファイルを作成してください。")
+        print(f"詳細: {e}")
         return
+
+    zac_id = credentials.zac_id
+    zac_password = credentials.zac_password
 
     with sync_playwright() as p:
         # ヘッドレスモードで起動（headless=Falseにするとブラウザが表示されます）
