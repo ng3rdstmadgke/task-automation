@@ -15,10 +15,6 @@ services:
         source: ${HOST_DIR:-../../}/jobcan_kintai/.env
         target: /app/.env
         read_only: true
-      - type: bind
-        source: ${HOST_DIR:-../../}/jobcan_kintai/auth.json
-        target: /app/auth.json
-        read_only: true
     environment:
       - TZ=Asia/Tokyo
       - PYTHONUNBUFFERED=1
