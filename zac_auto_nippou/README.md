@@ -50,3 +50,12 @@ config.json を開き修正
 # generate_auth.pyは事前にログインセッションファイル(auth.json)を生成
 uv run python generate_auth.py && uv run python main.py
 ```
+
+## 変更履歴
+
+### 2026-03-08: 型安全性の向上
+
+- `python-dotenv` を `pydantic-settings` に置き換え
+- すべてのデータ構造をPydanticモデルに変換
+- 関数の型ヒントを追加
+- 既存の`config.json`形式との後方互換性を維持
