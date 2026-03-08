@@ -7,7 +7,7 @@ services:
       dockerfile: docker/zac_auto_nippou/Dockerfile
     container_name: zac_auto_nippou_app
     volumes:
-      - ../../zac_auto_nippou/config.json:/app/config.json
-      - ../../zac_auto_nippou/auth.json:/app/auth.json
+      - ../../zac_auto_nippou/config.json:/app/config.json:ro
+      - ../../zac_auto_nippou/.env:/app/.env:ro
     environment:
       - TZ=Asia/Tokyo
