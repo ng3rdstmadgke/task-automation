@@ -1,6 +1,15 @@
 import os
 from playwright.sync_api import sync_playwright
-from dotenv import load_dotenv
+from pydantic import Field, ValidationError
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class ZacCredentials(BaseSettings):
+    """環境変数（.env）の構造"""
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    zac_id: str = Field(min_length=1)
+    zac_password: str = Field(min_length=1)
 
 def login_and_save_auth():
     # .envファイルから環境変数を読み込む
