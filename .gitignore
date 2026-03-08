@@ -8,5 +8,4 @@ core
 
 .devcontainer/
 .devcontainer/.env
-docs/plans
 tmp/
