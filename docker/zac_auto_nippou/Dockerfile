@@ -24,5 +24,9 @@ COPY zac_auto_nippou/ /app/
 RUN uv run playwright install chromium
 RUN uv run playwright install-deps chromium
 
+# Copy and set permissions for entrypoint script
+COPY docker/zac_auto_nippou/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # 実行コマンド (docker-compose側で上書き可能)
 CMD ["uv", "run", "python", "main.py"]
