@@ -5,7 +5,6 @@ import jpholiday
 import os
 from playwright.sync_api import sync_playwright
 
-
 def is_workday_or_paid(day, target_year, target_month, paid_leave_days):
     d = date(target_year, target_month, day)
     # 土日 または 祝日 は対象外
@@ -99,27 +98,10 @@ def run_automation(config):
             browser = p.chromium.launch(headless=True)
             context = browser.new_context(storage_state=auth_file)
         else:
-            print("auth.jsonが見つかりません。初回はホストマシンのローカル環境でスクリプトを実行し、作成されたauth.jsonを共有してください。")
-            # Docker環境でGUIは出せないため、ここで終了するかHeadlessで処理可能な自動ログインを組む必要があります。
-            # 今回は事前に用意した auth.json がある前提とします。
-            print("Docker環境のHeadlessモードでは手動ログインができないため処理を中断します。")
+            print("auth.jsonが見つかりません。generate_auth.pyを実行してください。")
             return
             
-            # 手動でローカル作成する場合は以下を使用します（参考）
-            # browser = p.chromium.launch(headless=False)
-            # context = browser.new_context()
-            # page = context.new_page()
-            # page.goto("https://secure.zac.ai/beex/b/asp/Shinsei/Nippou")
-            # print("ブラウザ上でログインを完了させてください。日報画面を検知するまで待機します...")
-            # page.wait_for_url("**/asp/Shinsei/Nippou**", timeout=0)
-            # context.storage_state(path=auth_file)
-            
         page = context.pages[0] if context.pages else context.new_page()
-
-        if page.url.find("Nippou") == -1:
-             page.goto("https://secure.zac.ai/beex/b/asp/Shinsei/Nippou")
-             page.wait_for_load_state("networkidle")
-             page.wait_for_timeout(2000)  # 画面が安定するまで待機
 
         # 指定月の日数分ループ
         for day in range(1, calendar.monthrange(config["target_year"], config["target_month"])[1] + 1):
@@ -133,49 +115,29 @@ def run_automation(config):
                 
             print(f"--- {day}日 の処理を開始 ---")
             
+            # 該当日付の日報ページに直接アクセス
+            formatted_date = f"{config['target_year']:04d}/{config['target_month']:02d}/{day:02d}"
+            url = f"https://secure.zac.ai/beex/b/asp/Shinsei/Nippou?date_nippou={formatted_date}"
+            
             try:
-                # iframe "classic_window" を特定
-                frame = page.frame_locator("#classic_window")
-
-                # DOMが安定するまで少し待機
-                page.wait_for_timeout(500)
-
-                # 左の小さなカレンダー表から日付リンクをクリック
-                day_str = str(day)
-
-                # カレンダー内のリンクを.count()と.nth()で処理（.all()を使わない）
-                calendar_locator = frame.locator("table td a")
-                link_count = calendar_locator.count()
-                clicked = False
-
-                import re
-                for i in range(link_count):
-                    try:
-                        # 毎回nth()で取得（DOMの最新状態を反映）
-                        link = calendar_locator.nth(i)
-                        text = link.text_content().strip()
-                        match = re.match(r'^(\d+)', text)
-                        if match:
-                            number = match.group(1)
-                            if number == day_str:
-                                # クリック
-                                link.click()
-                                page.wait_for_load_state("networkidle")
-                                page.wait_for_timeout(3000)  # 画面遷移後の安定化待機（3秒）
-                                clicked = True
-                                break
-                    except:
-                        continue
-
-                if not clicked:
-                    print(f"{day}日 のリンクが見つかりませんでした。")
-            except Exception as e:
-                print(f"{day}日 の画面遷移に失敗しました: {e}")
-                continue
+                page.goto(url)
+                page.wait_for_load_state("networkidle")
+                page.wait_for_timeout(2000)
                 
-            # iframe を再取得（画面遷移でリロードされている可能性があるため）
-            frame = page.frame_locator("#classic_window")
-
+                frame = page.frame_locator("#classic_window")
+                
+                # 日報フォームが表示されているか確認
+                time_in_hour = frame.locator("select[name='time_in_hour']")
+                if time_in_hour.count() == 0:
+                    print(f"  {day}日の日報フォームが表示されませんでした。スキップします。")
+                    continue
+                    
+                print(f"  {day}日の日報フォームを表示しました。")
+                
+            except Exception as e:
+                print(f"  {day}日へのアクセスに失敗しました: {e}")
+                continue
+            
             day_info = schedule[day]
             
             try:
@@ -186,6 +148,7 @@ def run_automation(config):
                     frame.locator("select[name='time_in_minute']").select_option("0")
                     frame.locator("select[name='time_out_hour']").select_option("17")
                     frame.locator("select[name='time_out_minute']").select_option("0")
+
                     frame.locator("select[name='time_break_input_hour']").select_option("0")
                     frame.locator("select[name='time_break_input_minute']").select_option("0")
                 elif day_info["type"] == "workday":
@@ -193,10 +156,11 @@ def run_automation(config):
                     frame.locator("select[name='time_in_minute']").select_option("0")
                     frame.locator("select[name='time_out_hour']").select_option(config["default_times"]["departure"])
                     frame.locator("select[name='time_out_minute']").select_option("0")
+
                     frame.locator("select[name='time_break_input_hour']").select_option(config["default_times"]["break"])
                     frame.locator("select[name='time_break_input_minute']").select_option("0")
             except Exception as e:
-                print(f"時間の入力に失敗しましたが、一旦続行します。詳細: {e}")
+                print(f"  時間の入力に失敗しました: {e}")
                 continue
                 
             # --- 案件の入力 ---
@@ -219,13 +183,13 @@ def run_automation(config):
                         frame.locator(f"input[name='code_project{row_num}']").press("Tab")
                         page.wait_for_timeout(1000)  # 非同期の名称自動表示を待つ
 
-                    # 所要時間（時）
+                    # 所要時間（時）- value属性で選択
                     frame.locator(f"select[name='time_required_hour{row_num}']").select_option(str(task["hours"]))
-                    # 所要時間（分）
+                    # 所要時間（分）- value属性で選択
                     frame.locator(f"select[name='time_required_minute{row_num}']").select_option("0")
 
                 except Exception as e:
-                    print(f"案件行 {i+1} の入力中にエラーが発生しました。セレクタの調整が必要かもしれません。: {e}")
+                    print(f"  案件行 {i+1} の入力中にエラーが発生しました: {e}")
                     
             # --- 日報の確定 ---
             # 確定ボタン（id="button7"）をクリック
@@ -251,9 +215,6 @@ def run_automation(config):
                 #        print(f"  [週報] {day}日は週の最後のため、週報を確定しました。")
             
             print(f"{day}日の処理完了。")
-
-            # 次の日付選択の前に待機（画面が安定するまで）
-            page.wait_for_timeout(2000)
 
         print("指定された月の処理がすべて完了しました！ブラウザを閉じます。")
 
