@@ -4,6 +4,22 @@ from datetime import date
 import jpholiday
 import os
 from playwright.sync_api import sync_playwright
+from enum import Enum
+from pydantic import BaseModel, Field, field_validator
+
+
+class DayType(str, Enum):
+    """日のタイプ"""
+    PAID_LEAVE = "paid_leave"
+    WORKDAY = "workday"
+
+
+class TaskContent(str, Enum):
+    """作業内容の種類（ZACのid_sagyou_naiyouのvalue値）"""
+    PROJECT_WORK = "1"           # 案件作業
+    PAID_LEAVE = "27"            # 有給・リフレッシュ・特別休暇
+    SELF_DEVELOPMENT = "55"      # 自己啓発
+
 
 def is_weekday(day, target_year, target_month):
     d = date(target_year, target_month, day)
