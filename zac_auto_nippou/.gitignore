@@ -13,3 +13,4 @@ wheels/
 auth.json
 config.json
 .env
+tmp/

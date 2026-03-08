@@ -5,6 +5,7 @@ import jpholiday
 import os
 from playwright.sync_api import sync_playwright
 
+
 def is_workday_or_paid(day, target_year, target_month, paid_leave_days):
     d = date(target_year, target_month, day)
     # 土日 または 祝日 は対象外
@@ -47,13 +48,15 @@ def calculate_schedule(config):
     for day in paid_leave_days:
         schedule[day] = {
             "type": "paid_leave",
-            "tasks": [{"code": "", "content": "有給・リフレッシュ・特別休暇", "hours": 8}]
+            # contentはid_sagyou_naiyouのvalue属性（27="有給・リフレッシュ・特別休暇"）
+            "tasks": [{"code": "", "content": "27", "hours": 8}]
         }
         
     # 2. 案件時間のキューを作成
     task_queue = []
     for code, hours in project_hours.items():
-        task_queue.append({"code": code, "content": "案件作業", "hours": hours})
+        # contentはid_sagyou_naiyouのvalue属性（1="案件作業"）
+        task_queue.append({"code": code, "content": "1", "hours": hours})
         
     # 3. 通常稼働日のスケジュールを設定
     for day in workdays:
@@ -73,7 +76,8 @@ def calculate_schedule(config):
                 
         # もし時間が余ったら自己啓発で埋める
         if remaining_hours > 0:
-            tasks_today.append({"code": "", "content": "自己啓発", "hours": remaining_hours})
+            # contentはid_sagyou_naiyouのvalue属性（55="自己啓発"）
+            tasks_today.append({"code": "", "content": "55", "hours": remaining_hours})
             
         schedule[day] = {
             "type": "workday",
@@ -111,9 +115,11 @@ def run_automation(config):
             # context.storage_state(path=auth_file)
             
         page = context.pages[0] if context.pages else context.new_page()
-        
+
         if page.url.find("Nippou") == -1:
              page.goto("https://secure.zac.ai/beex/b/asp/Shinsei/Nippou")
+             page.wait_for_load_state("networkidle")
+             page.wait_for_timeout(2000)  # 画面が安定するまで待機
 
         # 指定月の日数分ループ
         for day in range(1, calendar.monthrange(config["target_year"], config["target_month"])[1] + 1):
@@ -130,83 +136,124 @@ def run_automation(config):
             try:
                 # iframe "classic_window" を特定
                 frame = page.frame_locator("#classic_window")
-                
+
+                # DOMが安定するまで少し待機
+                page.wait_for_timeout(500)
+
                 # 左の小さなカレンダー表から日付リンクをクリック
-                day_link = frame.get_by_role("link", name=str(day), exact=True)
-                if day_link.is_visible():
-                    day_link.click()
-                    page.wait_for_load_state("networkidle")
+                day_str = str(day)
+
+                # カレンダー内のリンクを.count()と.nth()で処理（.all()を使わない）
+                calendar_locator = frame.locator("table td a")
+                link_count = calendar_locator.count()
+                clicked = False
+
+                import re
+                for i in range(link_count):
+                    try:
+                        # 毎回nth()で取得（DOMの最新状態を反映）
+                        link = calendar_locator.nth(i)
+                        text = link.text_content().strip()
+                        match = re.match(r'^(\d+)', text)
+                        if match:
+                            number = match.group(1)
+                            if number == day_str:
+                                # クリック
+                                link.click()
+                                page.wait_for_load_state("networkidle")
+                                page.wait_for_timeout(3000)  # 画面遷移後の安定化待機（3秒）
+                                clicked = True
+                                break
+                    except:
+                        continue
+
+                if not clicked:
+                    print(f"{day}日 のリンクが見つかりませんでした。")
             except Exception as e:
-                print(f"{day}日 の画面遷移に失敗しました（すでに選択されている可能性があります）。: {e}")
+                print(f"{day}日 の画面遷移に失敗しました: {e}")
+                continue
                 
             # iframe を再取得（画面遷移でリロードされている可能性があるため）
             frame = page.frame_locator("#classic_window")
-                
-            # 確定済みのチェック（「確定解除」ボタンがdisabledでない状態で存在する場合は既に確定済み）
-            if frame.locator("input[value='確定解除']:not([disabled])").is_visible():
-                print(f"{day}日はすでに確定済みのためスキップします。")
-                continue
-                
+
             day_info = schedule[day]
             
             try:
                 # --- 出退勤時間の入力 ---
+                # select_option()はvalue属性で選択（例: "9" → <option value="9">9</option>）
                 if day_info["type"] == "paid_leave":
-                    frame.locator("tr").filter(has_text="出社時刻").locator("select").nth(0).select_option(config["default_times"]["arrival"])
-                    frame.locator("tr").filter(has_text="出社時刻").locator("select").nth(1).select_option("00")
-                    frame.locator("tr").filter(has_text="退社時刻").locator("select").nth(0).select_option(config["default_times"]["paid_leave_departure"])
-                    frame.locator("tr").filter(has_text="退社時刻").locator("select").nth(1).select_option("00")
+                    frame.locator("select[name='time_in_hour']").select_option("9")
+                    frame.locator("select[name='time_in_minute']").select_option("0")
+                    frame.locator("select[name='time_out_hour']").select_option("17")
+                    frame.locator("select[name='time_out_minute']").select_option("0")
+                    frame.locator("select[name='time_break_input_hour']").select_option("0")
+                    frame.locator("select[name='time_break_input_minute']").select_option("0")
                 elif day_info["type"] == "workday":
-                    frame.locator("tr").filter(has_text="出社時刻").locator("select").nth(0).select_option(config["default_times"]["arrival"])
-                    frame.locator("tr").filter(has_text="出社時刻").locator("select").nth(1).select_option("00")
-                    frame.locator("tr").filter(has_text="退社時刻").locator("select").nth(0).select_option(config["default_times"]["departure"])
-                    frame.locator("tr").filter(has_text="退社時刻").locator("select").nth(1).select_option("00")
-                    
-                    frame.locator("tr").filter(has_text="休憩").locator("select").nth(0).select_option(config["default_times"]["break"])
-                    frame.locator("tr").filter(has_text="休憩").locator("select").nth(1).select_option("00")
+                    frame.locator("select[name='time_in_hour']").select_option(config["default_times"]["arrival"])
+                    frame.locator("select[name='time_in_minute']").select_option("0")
+                    frame.locator("select[name='time_out_hour']").select_option(config["default_times"]["departure"])
+                    frame.locator("select[name='time_out_minute']").select_option("0")
+                    frame.locator("select[name='time_break_input_hour']").select_option(config["default_times"]["break"])
+                    frame.locator("select[name='time_break_input_minute']").select_option("0")
             except Exception as e:
                 print(f"時間の入力に失敗しましたが、一旦続行します。詳細: {e}")
+                continue
                 
             # --- 案件の入力 ---
+            content_dict = {
+                "1": "案件作業",
+                "27": "有給・リフレッシュ・特別休暇",
+                "55": "自己啓発",
+            }
             for i, task in enumerate(day_info["tasks"]):
-                print(f"  > 入力項目: {task['content']} ({task['hours']}時間)")
+                print(f"  > 入力項目: value={content_dict[task['content']]} プロジェクトコード={task['code']} ({task['hours']}時間)")
                 try:
-                    # 作業内容 （ZACはInputのnameにTaskContentが含まれることが多いが、環境依存の可能性あり）
-                    # 最初の行から順に入力
-                    frame.locator("input[name*='TaskContent']").nth(i).fill(task["content"])
-                    
+                    row_num = i + 1  # 行番号は1から始まる
+
+                    # 作業内容をセレクトボックスでvalue属性で選択（例: "1"=案件作業, "55"=自己啓発, "27"=有給）
+                    frame.locator(f"select[name='id_sagyou_naiyou{row_num}']").select_option(task["content"])
+
                     if task["code"]:
                         # 案件コードを入力してTabキーでフォーカスを外し、読み込みを発生させる
-                        frame.locator("input[name*='ProjectCode']").nth(i).fill(task["code"])
-                        frame.locator("input[name*='ProjectCode']").nth(i).press("Tab")
-                        page.wait_for_timeout(1000) # 非同期の名称自動表示を待つ
-                        
-                    # 所要時間 （出社・退社・休憩のSelectが上に6つあるため、それ以降のSelectを対象にする）
-                    # 注: ここはZACのDOM構成によってずれやすいため、もしエラーになったら調整が必要です
-                    hour_selects = frame.locator("select[name*='Hour']")
-                    # 概ね案件1行目の時間は4番目(index=3)にあたる
-                    hour_selects.nth(3 + i*2).select_option(str(task["hours"])) 
-                    
+                        frame.locator(f"input[name='code_project{row_num}']").fill(task["code"])
+                        frame.locator(f"input[name='code_project{row_num}']").press("Tab")
+                        page.wait_for_timeout(1000)  # 非同期の名称自動表示を待つ
+
+                    # 所要時間（時）
+                    frame.locator(f"select[name='time_required_hour{row_num}']").select_option(str(task["hours"]))
+                    # 所要時間（分）
+                    frame.locator(f"select[name='time_required_minute{row_num}']").select_option("0")
+
                 except Exception as e:
                     print(f"案件行 {i+1} の入力中にエラーが発生しました。セレクタの調整が必要かもしれません。: {e}")
                     
             # --- 日報の確定 ---
-            confirm_btn = frame.locator("input[value='確 定']")
-            if confirm_btn.is_visible():
+            # 確定ボタン（id="button7"）をクリック
+            confirm_btn = frame.locator("input#button7")
+            if confirm_btn.count() > 0:
+                print("  確定ボタンをクリックします...")
                 confirm_btn.click()
                 page.wait_for_load_state("networkidle")
+                page.wait_for_timeout(1000)
+                print("  確定処理完了")
                 
                 # --- 週報の確定（週の最後の日のみ） ---
-                if day in week_last_days:
-                    # 週の確定で再度画面がリフレッシュされる場合がある
-                    frame = page.frame_locator("#classic_window")
-                    weekly_confirm = frame.locator("input[value='週報確定']")
-                    if weekly_confirm.is_visible():
-                        weekly_confirm.click()
-                        page.wait_for_load_state("networkidle")
-                        print(f"[週報] {day}日は週の最後のため、週報を確定しました。")
+                #if day in week_last_days:
+                #    # 週の確定で再度画面がリフレッシュされる場合がある
+                #    frame = page.frame_locator("#classic_window")
+                #    # 週報確定ボタンにはidやnameがないため、valueで判定
+                #    weekly_confirm = frame.locator("input[value='週報確定']")
+                #    if weekly_confirm.count() > 0:
+                #        print("  [週報] 週報確定ボタンをクリックします...")
+                #        weekly_confirm.click()
+                #        page.wait_for_load_state("networkidle")
+                #        page.wait_for_timeout(1000)
+                #        print(f"  [週報] {day}日は週の最後のため、週報を確定しました。")
             
             print(f"{day}日の処理完了。")
+
+            # 次の日付選択の前に待機（画面が安定するまで）
+            page.wait_for_timeout(2000)
 
         print("指定された月の処理がすべて完了しました！ブラウザを閉じます。")
 
