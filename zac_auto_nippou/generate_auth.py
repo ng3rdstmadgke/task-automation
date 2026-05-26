@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 from playwright.sync_api import sync_playwright
 from pydantic import Field, ValidationError
@@ -27,7 +28,7 @@ def login_and_save_auth():
     with sync_playwright() as p:
         # ヘッドレスモードで起動（headless=Falseにするとブラウザが表示されます）
         browser = p.chromium.launch(headless=True)
-        context = browser.new_context()
+        context = browser.new_context(locale="ja-JP")
         page = context.new_page()
 
         print("ZACのログイン画面を開きます...")
@@ -36,16 +37,16 @@ def login_and_save_auth():
         # 第1段階: 社外接続の認証
         print("第1段階: 社外接続の認証を行います...")
         try:
-            # ログインIDを入力
-            login_id_input = page.get_by_role("textbox", name="ログインID")
+            # ログインIDを入力（日本語/英語両対応）
+            login_id_input = page.get_by_role("textbox", name=re.compile(r"ログインID|Login ID"))
             login_id_input.fill(zac_id)
 
-            # パスワードを入力
-            password_input = page.get_by_role("textbox", name="パスワード")
+            # パスワードを入力（日本語/英語両対応）
+            password_input = page.get_by_role("textbox", name=re.compile(r"パスワード|Password"))
             password_input.fill(zac_password)
 
-            # 接続ボタンをクリック
-            connect_button = page.get_by_role("button", name="接続")
+            # 接続ボタンをクリック（日本語/英語両対応）
+            connect_button = page.get_by_role("button", name=re.compile(r"接続|Connect"))
             connect_button.click()
 
             print("第1段階のログイン処理を送信しました。画面遷移を待機中...")
@@ -67,13 +68,13 @@ def login_and_save_auth():
                 page.wait_for_timeout(2000)
 
                 # パスワードの入力欄（ログインIDは第1段階から引き継がれている）
-                password_input = page.get_by_role("textbox", name="パスワード")
+                password_input = page.get_by_role("textbox", name=re.compile(r"パスワード|Password"))
                 if password_input.is_visible():
                     password_input.fill(zac_password)
                     print("パスワードを入力しました。")
 
                     # ログインボタンをクリック
-                    login_button = page.get_by_role("button", name="ログイン")
+                    login_button = page.get_by_role("button", name=re.compile(r"ログイン|Login"))
                     if login_button.is_visible():
                         login_button.click()
                         print("第2段階のログイン処理を送信しました。画面遷移を待機中...")
