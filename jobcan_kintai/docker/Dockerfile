@@ -7,10 +7,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV TZ=Asia/Tokyo
 
+# uvをグローバルにインストール
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 WORKDIR /app
 
 COPY jobcan_kintai/pyproject.toml jobcan_kintai/uv.lock /app/
-RUN pip install uv
 RUN uv sync
 
 RUN uv run playwright install chromium

@@ -9,12 +9,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # タイムゾーンを日本に設定
 ENV TZ=Asia/Tokyo
 
+# uvをグローバルにインストール
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 # 作業ディレクトリの設定
 WORKDIR /app
 
 # 依存ライブラリのコピーとインストール (uvを利用)
 COPY zac_auto_nippou/pyproject.toml zac_auto_nippou/uv.lock /app/
-RUN pip install uv
 RUN uv sync
 
 # Playwrightが使用するブラウザ(Chromium)と依存OSライブラリ群のインストール
